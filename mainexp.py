@@ -8,10 +8,12 @@ import threading
 import os
 from concurrent.futures import ThreadPoolExecutor
 import warnings
-warnings.filterwarnings("ignore", category=UserWarning)
+import numpy as np
 
+warnings.filterwarnings("ignore", category=UserWarning)
 nltk.download('punkt', quiet=True)
 smooth_fn = SmoothingFunction().method2
+
 
 # Load the data
 with open("msgtextV12.json") as f1:
@@ -20,29 +22,43 @@ with open("difftextV12.json") as f2:
     diffdata = json.load(f2)
 
 # Get the last 7661 items from the dataset
-msgdata = msgdata[-7661:]
-diffdata = diffdata[-7661:]
+msgdata = msgdata[-661:]
+diffdata = diffdata[-661:]
+
+tokenized_queries = [data.split() for data in diffdata]
 
 # Initialize LLM
-llm = Ollama(model="deepseek-coder-v2", base_url="http://localhost:11434")
+llm = Ollama(model="llama3.2", base_url="http://localhost:11434")
 prompt = ChatPromptTemplate.from_messages([
-    ("system", "Your task is to write a concise commit message according to a given code diff. \
-     Your output should only be the commit message with no other information."),
-    ("user", "{input}")
+    ("system", "You will receive a pair of code diff and its corresponding\
+        commit message as an exemplar, and a given\
+        code diff. Your task is to write a concise commit message\
+        according the given code diff under the guidance of the\
+        exemplar. Your output should only be the commit message\
+        with no other information."),
+    ("user", "Code Diff: {retrieved_diff}\
+        Commit Message: {retrieved_msg}\
+        Code Diff: {query_diff} Commit Message:")
 ])
 chain = prompt | llm
 
-# Initialize lists to store all references and candidates
+results_lock = threading.Lock()
 all_references = []
 all_candidates = []
-results_lock = threading.Lock()
 
 def task1(start_index, end_index):
     local_references = []
     local_candidates = []
     for index in tqdm(range(start_index, end_index), leave=False):
+        
+        exemplar_diff = diffdata[index]
+        exemplar_msg = msgdata[index]
         # Get response from LLM
-        rsp = chain.invoke({"input": diffdata[index]})
+        rsp = chain.invoke({
+            "retrieved_diff": exemplar_diff,  # exemplar 的 code diff
+            "retrieved_msg": exemplar_msg,    # exemplar 的 commit message
+            "query_diff": diffdata[index]     # 你想要生成 commit message 的 code diff
+        })
         reference = [nltk.word_tokenize(msgdata[index].lower())]
         candidate = nltk.word_tokenize(rsp.lower())
         
@@ -57,28 +73,30 @@ def task1(start_index, end_index):
 if __name__ == "__main__":
     print("ID of process running main program: {}".format(os.getpid()))
     print("Main thread name: {}".format(threading.current_thread().name))
-
+    print(diffdata[0])
+    
     # Calculate the new data size and chunk size
     data_size = len(msgdata)
-    chunk_size = data_size // 20
+    chunk_size = data_size // 2
     print(f"Total data size: {data_size}")
 
     # Create a thread pool with 20 threads
-    with ThreadPoolExecutor(max_workers=20) as executor:
+    with ThreadPoolExecutor(max_workers=2) as executor:
         # Submit tasks to the thread pool
         futures = []
-        for i in range(20):
+        for i in range(2):
             start = i * chunk_size
-            end = start + chunk_size if i < 19 else data_size
+            end = start + chunk_size if i < 1 else data_size
             futures.append(executor.submit(task1, start, end))
         
         # Wait for all tasks to complete
         for future in futures:
             future.result()
 
+
     # Calculate corpus BLEU score
     corpus_bleu_score = corpus_bleu(all_references, all_candidates, weights=(0.25, 0.25, 0.25, 0.25), smoothing_function=smooth_fn)
-    print(f"Corpus BLEU-4 score with smoothing: {corpus_bleu_score}")
+    print(f" Corpus BLEU-4 score with smoothing: {corpus_bleu_score}")
 
 
 
