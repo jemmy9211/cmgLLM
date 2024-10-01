@@ -18,8 +18,8 @@ smooth_fn = SmoothingFunction().method2
 
 # Commit Bench
 ds = load_dataset("Maxscha/commitbench")
-CommitBenchdiffs = [sample['diff'] for sample in ds['train']]
-CommitBenchcommit_messages = [sample['message'] for sample in ds['train']]
+CommitBenchdiffs = [sample['diff'] for sample in ds['test']]
+CommitBenchcommit_messages = [sample['message'] for sample in ds['test']]
 bm25 = BM25(device='cuda')
 bm25.index(CommitBenchdiffs) 
 
@@ -30,13 +30,13 @@ with open("difftextV12.json") as f2:
     diffdata = json.load(f2)
 
 # Get the last 7661 items from the dataset
-msgdata = msgdata[-661:]
-diffdata = diffdata[-661:]
+msgdata = msgdata[-7661:]
+diffdata = diffdata[-7661:]
 
 tokenized_queries = [data.split() for data in diffdata]
 
 # Initialize LLM
-llm = Ollama(model="deepseek-coder-v2", base_url="http://localhost:11434")
+llm = Ollama(model="codellama", base_url="http://localhost:11434")
 prompt = ChatPromptTemplate.from_messages([
     ("system", "You will receive a pair of code diff and its corresponding\
         commit message as an exemplar, and a given\
