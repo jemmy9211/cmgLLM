@@ -9,11 +9,19 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 import warnings
 import numpy as np
+from bm25_pt import BM25
+from datasets import load_dataset
 
 warnings.filterwarnings("ignore", category=UserWarning)
 nltk.download('punkt', quiet=True)
 smooth_fn = SmoothingFunction().method2
 
+# Commit Bench
+ds = load_dataset("Maxscha/commitbench")
+CommitBenchdiffs = [sample['diff'] for sample in ds['train']]
+CommitBenchcommit_messages = [sample['message'] for sample in ds['train']]
+bm25 = BM25(device='cuda')
+bm25.index(CommitBenchdiffs) 
 
 # Load the data
 with open("msgtextV12.json") as f1:
@@ -28,7 +36,7 @@ diffdata = diffdata[-661:]
 tokenized_queries = [data.split() for data in diffdata]
 
 # Initialize LLM
-llm = Ollama(model="llama3.2", base_url="http://localhost:11434")
+llm = Ollama(model="deepseek-coder-v2", base_url="http://localhost:11434")
 prompt = ChatPromptTemplate.from_messages([
     ("system", "You will receive a pair of code diff and its corresponding\
         commit message as an exemplar, and a given\
@@ -50,9 +58,12 @@ def task1(start_index, end_index):
     local_references = []
     local_candidates = []
     for index in tqdm(range(start_index, end_index), leave=False):
-        
-        exemplar_diff = diffdata[index]
-        exemplar_msg = msgdata[index]
+        query = [diffdata[index]]
+        doc_scores = bm25.score_batch(query)
+        doc_scores = doc_scores.cpu().numpy()[0]
+        best_index = np.argmax(doc_scores)
+        exemplar_diff = CommitBenchdiffs[best_index]
+        exemplar_msg = CommitBenchcommit_messages[best_index]
         # Get response from LLM
         rsp = chain.invoke({
             "retrieved_diff": exemplar_diff,  # exemplar 的 code diff
