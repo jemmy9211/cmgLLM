@@ -11,11 +11,16 @@ import warnings
 import numpy as np
 from bm25_pt import BM25
 from datasets import load_dataset
+import torch
+
+# Clear cache
+torch.cuda.empty_cache()
 
 warnings.filterwarnings("ignore", category=UserWarning)
 nltk.download('punkt', quiet=True)
 smooth_fn = SmoothingFunction().method2
 
+modelname="llava:13b"
 # Commit Bench
 ds = load_dataset("Maxscha/commitbench")
 CommitBenchdiffs = [sample['diff'] for sample in ds['test']]
@@ -36,7 +41,7 @@ diffdata = diffdata[-7661:]
 tokenized_queries = [data.split() for data in diffdata]
 
 # Initialize LLM
-llm = Ollama(model="codellama", base_url="http://localhost:11434")
+llm = Ollama(model=modelname, base_url="http://localhost:11434")
 prompt = ChatPromptTemplate.from_messages([
     ("system", "You will receive a pair of code diff and its corresponding\
         commit message as an exemplar, and a given\
@@ -84,27 +89,15 @@ def task1(start_index, end_index):
 if __name__ == "__main__":
     print("ID of process running main program: {}".format(os.getpid()))
     print("Main thread name: {}".format(threading.current_thread().name))
-    #print(diffdata[0])
-    
+    print(f"Method: BM25")
+    print(f"Model: {modelname}")
+        
     # Calculate the new data size and chunk size
     data_size = len(msgdata)
-    chunk_size = data_size // 4
     print(f"Total data size: {data_size}")
 
-    # Create a thread pool with 20 threads
-    # with ThreadPoolExecutor(max_workers=4) as executor:
-        # Submit tasks to the thread pool
-        # futures = []
-        # for i in range(4):
-        #    start = i * chunk_size
-        #    end = start + chunk_size if i < 3 else data_size
-        #    futures.append(executor.submit(task1, start, end))
-        
-        # Wait for all tasks to complete
-        #for future in futures:
-        #    future.result()
-
     task1(0,data_size)
+    
     # Calculate corpus BLEU score
     corpus_bleu_score = corpus_bleu(all_references, all_candidates, weights=(0.25, 0.25, 0.25, 0.25), smoothing_function=smooth_fn)
     print(f" Corpus BLEU-4 score with smoothing: {corpus_bleu_score}")
