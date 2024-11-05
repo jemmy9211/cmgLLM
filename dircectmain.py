@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 nltk.download('punkt', quiet=True)
 smooth_fn = SmoothingFunction().method2
 
-modelname = "llava:13b"
+modelname = "llama3.2"
 
 # Load the data
 with open("msgtextV12.json") as f1:
@@ -68,17 +68,17 @@ if __name__ == "__main__":
     
     # Calculate the new data size and chunk size
     data_size = len(msgdata)
-    chunk_size = data_size // 2
+    chunk_size = data_size // 4
     print(f"Total data size: {data_size}")
 
     # Create a thread pool with 20 threads
-    with ThreadPoolExecutor(max_workers=2) as executor:
+    with ThreadPoolExecutor(max_workers=4) as executor:
     # Submit tasks to the thread pool
         futures = []
 
-        for i in range(2):
+        for i in range(4):
             start = i * chunk_size
-            end = start + chunk_size if i < 1 else data_size
+            end = start + chunk_size if i < 3 else data_size
             futures.append(executor.submit(task1, start, end))
         
         # Wait for all tasks to complete

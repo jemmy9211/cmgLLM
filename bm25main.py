@@ -71,9 +71,9 @@ def task1(start_index, end_index):
         exemplar_msg = CommitBenchcommit_messages[best_index]
         # Get response from LLM
         rsp = chain.invoke({
-            "retrieved_diff": exemplar_diff,  # exemplar çš„ code diff
-            "retrieved_msg": exemplar_msg,    # exemplar çš„ commit message
-            "query_diff": diffdata[index]     # ä½ æƒ³è¦ç”Ÿæˆ commit message çš„ code diff
+            "retrieved_diff": exemplar_diff,  # exemplar ªº code diff
+            "retrieved_msg": exemplar_msg,    # exemplar ªº commit message
+            "query_diff": diffdata[index]     # §A·Q­n¥Í¦¨ commit message ªº code diff
         })
         reference = [nltk.word_tokenize(msgdata[index].lower())]
         candidate = nltk.word_tokenize(rsp.lower())
@@ -101,6 +101,3 @@ if __name__ == "__main__":
     # Calculate corpus BLEU score
     corpus_bleu_score = corpus_bleu(all_references, all_candidates, weights=(0.25, 0.25, 0.25, 0.25), smoothing_function=smooth_fn)
     print(f" Corpus BLEU-4 score with smoothing: {corpus_bleu_score}")
-
-
-
