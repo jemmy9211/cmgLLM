@@ -27,7 +27,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 nltk.download('punkt', quiet=True)
 smooth_fn = SmoothingFunction().method2
 
-modelname = "llama3.2"
+modelname = "gemma2"
 
 # Load CommitBench dataset
 ds = load_dataset("Maxscha/commitbench")
