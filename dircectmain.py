@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 nltk.download('punkt', quiet=True)
 smooth_fn = SmoothingFunction().method2
 
-modelname = "llama3.2"
+modelname = "llama3.1"
 
 # Load the data
 with open("msgtextV12.json") as f1:
