@@ -27,7 +27,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 nltk.download('punkt', quiet=True)
 smooth_fn = SmoothingFunction().method2
 
-modelname = "llava"
+modelname = "deepseek-coder-v2"
 
 # Load CommitBench dataset
 ds = load_dataset("Maxscha/commitbench")
