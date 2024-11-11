@@ -38,6 +38,7 @@ test_dataset = Dataset.from_list(test_data)
 # 載入 T5 Tokenizer 和模型
 tokenizer = RobertaTokenizer.from_pretrained("Salesforce/codet5p-220m")
 model = T5ForConditionalGeneration.from_pretrained("Salesforce/codet5p-220m")
+model.gradient_checkpointing_enable()
 
 # 定義數據處理函數
 def preprocess_function(examples):
@@ -45,7 +46,7 @@ def preprocess_function(examples):
     inputs = ["diff: " + diff for diff in examples["diff"]]
     model_inputs = tokenizer(
         inputs,
-        max_length=256,
+        max_length=128,
         padding="max_length",  # 填充到最大長度
         truncation=True        # 截斷過長的序列
     )
@@ -84,8 +85,8 @@ training_args = TrainingArguments(
     output_dir="./results",
     evaluation_strategy="epoch",
     learning_rate=3e-5,
-    per_device_train_batch_size=4,  # 減小批次大小
-    per_device_eval_batch_size=4,   # 減小批次大小
+    per_device_train_batch_size=2,  # 減小批次大小
+    per_device_eval_batch_size=1,   # 減小批次大小
     num_train_epochs=4,
     weight_decay=0.01,
     save_total_limit=2,
