@@ -10,7 +10,7 @@ nltk.download('punkt', quiet=True)
 
 # 載入 Tokenizer 和微調後的模型
 tokenizer = RobertaTokenizer.from_pretrained("Salesforce/codet5p-220m")
-model = T5ForConditionalGeneration.from_pretrained("./results/checkpoint-30600")
+model = T5ForConditionalGeneration.from_pretrained("./results/checkpoint-81592")
 
 # 將模型移動到 GPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
