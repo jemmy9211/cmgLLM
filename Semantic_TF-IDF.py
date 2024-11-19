@@ -27,7 +27,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 nltk.download('punkt', quiet=True)
 smooth_fn = SmoothingFunction().method2
 
-modelname = "deepseek-coder-v2"
+modelname = "llama3"
 
 # Load CommitBench dataset
 ds = load_dataset("Maxscha/commitbench")
@@ -47,6 +47,9 @@ with open("msgtextV12.json") as f1:
     msgdata = json.load(f1)
 with open("difftextV12.json") as f2:
     diffdata = json.load(f2)
+
+msgdata = msgdata[:20000]
+diffdata = diffdata[:20000]
 
 # Ensure data lengths match
 assert len(msgdata) == len(diffdata), "Mismatch between message and diff data lengths."
@@ -122,7 +125,7 @@ if __name__ == "__main__":
     data_size = len(msgdata)
     print(f"Total data size: {data_size}")
 
-    num_threads = 4  # Adjust as needed
+    num_threads = 1  # Adjust as needed
     chunk_size = data_size // num_threads
     indices_list = []
 
