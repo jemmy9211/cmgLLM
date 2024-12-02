@@ -27,7 +27,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 nltk.download('punkt', quiet=True)
 smooth_fn = SmoothingFunction().method2
 
-modelname = "llama3"
+modelname = "qwen2.5-coder:3b"
 
 # Load CommitBench dataset
 ds = load_dataset("Maxscha/commitbench")
